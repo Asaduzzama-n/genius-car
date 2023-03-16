@@ -1,14 +1,39 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/images/login/login.svg';
 import { FcGoogle } from 'react-icons/fc';
 import { ImFacebook } from 'react-icons/im';
+import { AuthContext } from '../../../Context/AuthProvider';
+import { toast } from 'react-hot-toast';
 const Login = () => {
 
-
-
+    const [error,setError] = useState(null);
+    const {userLoginWithEmail,setLoading} = useContext(AuthContext);
+    const navigate = useNavigate();
     const handleLoginForm = (event) => {
         event.preventDefault();
+        const form = event.target;
+
+        const email = form.email.value;
+        const password = form.password.value;
+
+        userLoginWithEmail(email,password)
+        .then(userCredential =>{
+            const user = userCredential.user;
+            if(user.emailVerified){
+                navigate('/');
+                console.log(user);
+            }else{
+                toast.error("YOUR EMAIL IS NOT VERIFIED! PLEASE VERIFY YOUR EMAIL...");
+            }
+        })
+        .catch(error => {
+            setError(error.message);
+            console.error(error.message)
+        })
+        .finally(()=>{setLoading(false)})
+        
+
     }
 
     return (
@@ -35,6 +60,9 @@ const Login = () => {
                                 <input type="password" placeholder="password" name='password' className="input input-bordered" />
                                 <label className="label">
                                     <Link className="label-text-alt link link-hover">Forgot password?</Link>
+                                </label>
+                                <label className="label">
+                                    <p className='text-center text-red-400 text-sm'>{error}</p>
                                 </label>
                             </div>
                             <div className="form-control mt-6">

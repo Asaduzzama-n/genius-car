@@ -1,13 +1,43 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/images/login/login.svg';
 import { FcGoogle } from 'react-icons/fc';
 import { ImFacebook } from 'react-icons/im';
+import { AuthContext } from '../../../Context/AuthProvider';
 const Signup = () => {
+
+    const {createUserWithEmail,updateUserProfile,verifyUser} = useContext(AuthContext);
+
 
     const handleSignIn = (event) => {
         event.preventDefault();
+        const form = event.target;
+
+        const name =  form.name.value;
+        const email = form.email.value;
+        const password = form.password.value;
+
+        createUserWithEmail(email,password)
+        .then(userCredential => {
+            const user = userCredential.user;
+            form.reset();
+            handleUpdateProfile(name);
+            handleUserVerify();
+            
+            console.log(user);
+        } )
+        .catch(err => console.error(err.message))
     }
+
+    const handleUserVerify = () =>{
+        verifyUser()
+    }
+
+    const handleUpdateProfile = (name) =>{
+        updateUserProfile({displayName: name})
+        .then(() => {console.log("PROFILE UPDATED!!")})
+        .then(error => {console.error(error.message)})
+    } 
 
     return (
         <div>
