@@ -8,10 +8,10 @@ const Header = () => {
     const { logOut, user,setUser } = useContext(AuthContext);
 
     const handleSignOut = () => {
-        setUser(null);
+
         logOut()
-            .then(() => { console.log(user,"SS") })
-            .catch((error) => { })
+            .then()
+            .catch()
     }
 
     const menuItems = <>

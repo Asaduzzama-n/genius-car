@@ -1,10 +1,11 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth'
 import app from '../firebase/firebase.config';
+
 export const AuthContext = createContext();
+const auth = getAuth(app);
 
 const AuthProvider = ({ children }) => {
-    const auth = getAuth(app);
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -16,7 +17,6 @@ const AuthProvider = ({ children }) => {
     }
 
     const updateUserProfile = (profile) => {
-        setLoading(true);
         return updateProfile(auth.currentUser, profile);
     }
 
@@ -24,30 +24,33 @@ const AuthProvider = ({ children }) => {
         return sendEmailVerification(auth.currentUser);
     }
 
-    const userLoginWithEmail = (email,password) =>{
+    const userLoginWithEmail = (email, password) => {
         setLoading(true);
-        return signInWithEmailAndPassword(auth,email,password);
+        return signInWithEmailAndPassword(auth, email, password);
     }
 
-    const logOut = () =>{
+    const logOut = () => {
+        setLoading(true);
+        localStorage.removeItem('Token');
         return signOut(auth);
     }
 
 
-    useEffect(()=>{
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) =>{
-            if(currentUser?.emailVerified === null || currentUser?.emailVerified){
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, currentUser => {
+            if (currentUser === null || currentUser?.emailVerified) {
                 setUser(currentUser);
-                
+
             }
             setLoading(false);
 
-            return ()=> unsubscribe();
         })
-    },[])
+        return () => unsubscribe();
+
+    }, [])
 
 
-    const authInfo = { user, createUserWithEmail, updateUserProfile,verifyUser,userLoginWithEmail,logOut,setLoading, setUser}
+    const authInfo = { user, createUserWithEmail, updateUserProfile, verifyUser, userLoginWithEmail, logOut, setLoading, setUser,loading }
 
     return (
         <div>

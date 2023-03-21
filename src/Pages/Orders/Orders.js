@@ -5,17 +5,31 @@ import OrderCard from './OrderCard';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
-    const { user } = useContext(AuthContext);
+    const { user,logOut } = useContext(AuthContext);
 
     useEffect(() => {
-        fetch(`http://localhost:5000/orders/?email=${user?.email}`)
-            .then(res => res.json())
-            .then(data => setOrders(data))
-    }, [user?.email])
+        fetch(`http://localhost:5000/orders/?email=${user?.email}`,{
+            headers:{
+                authorization:`Bearer ${localStorage.getItem('Token')}`
+            }
+        })
+            .then(res => {
+                if(res.status === 401 || res.status === 403){
+                   return logOut();
+                }
+                return res.json();
+            })
+            .then(data => {
+                setOrders(data);
+            })
+    }, [user?.email,logOut])
 
     const handleDelete = (id) =>{
         fetch(`http://localhost:5000/orders/${id}`,{
             method:'DELETE',
+            headers:{
+                authorization:`Bearer ${localStorage.getItem('Token')}`
+            }
         })
         .then(res => res.json())
         .then(data => {
@@ -35,7 +49,9 @@ const Orders = () => {
         fetch(`http://localhost:5000/orders/${id}`,{
             method:'PATCH',
             headers:{
-                'content-type':'application/json'
+                'content-type':'application/json',
+                authorization:`Bearer ${localStorage.getItem('Token')}`
+
             },
             body:JSON.stringify({status:'Approved'})
         })

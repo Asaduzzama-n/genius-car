@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/images/login/login.svg';
 import { FcGoogle } from 'react-icons/fc';
 import { ImFacebook } from 'react-icons/im';
@@ -7,9 +7,13 @@ import { AuthContext } from '../../../Context/AuthProvider';
 import { toast } from 'react-hot-toast';
 const Login = () => {
 
-    const [error,setError] = useState(null);
-    const {userLoginWithEmail,setLoading} = useContext(AuthContext);
+    const [error, setError] = useState(null);
+    const { userLoginWithEmail, setLoading } = useContext(AuthContext);
+
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || '/';
+    
     const handleLoginForm = (event) => {
         event.preventDefault();
         const form = event.target;
@@ -17,22 +21,41 @@ const Login = () => {
         const email = form.email.value;
         const password = form.password.value;
 
-        userLoginWithEmail(email,password)
-        .then(userCredential =>{
-            const user = userCredential.user;
-            if(user.emailVerified){
-                navigate('/');
-                console.log(user);
-            }else{
-                toast.error("YOUR EMAIL IS NOT VERIFIED! PLEASE VERIFY YOUR EMAIL...");
-            }
-        })
-        .catch(error => {
-            setError(error.message);
-            console.error(error.message)
-        })
-        .finally(()=>{setLoading(false)})
-        
+
+        userLoginWithEmail(email, password)
+            .then(userCredential => {
+                const user = userCredential.user;
+
+                const currentUser = { email: user.email }
+
+
+                if (user.emailVerified) {
+
+                    fetch('http://localhost:5000/jwt', {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'application/json'
+                        },
+                        body: JSON.stringify(currentUser)
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log(data);
+                            //not the safest way
+                            localStorage.setItem("Token", data.token);
+                            navigate(from, { replace: true });
+
+                        })
+                } else {
+                    toast.error("YOUR EMAIL IS NOT VERIFIED! PLEASE VERIFY YOUR EMAIL...");
+                }
+            })
+            .catch(error => {
+                setError(error.message);
+                console.error(error.message)
+            })
+            .finally(() => { setLoading(false) })
+
 
     }
 
